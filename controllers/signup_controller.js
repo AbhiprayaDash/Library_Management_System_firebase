@@ -5,6 +5,8 @@ const { initializeFirebase } = require('../firebase');
 // eslint-disable-next-line no-unused-vars
 const fireapp = initializeFirebase();
 const auth = getAuth();
+
+// signup using email and password
 const customSignUp = (req, res) => {
   const response = {};
   createUserWithEmailAndPassword(auth, req.body.email, req.body.password)

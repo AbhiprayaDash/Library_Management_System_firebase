@@ -8,10 +8,7 @@ const {
   getDocs,
   deleteDoc,
   updateDoc,
-  startAfter,
-  onSnapshot,
   orderBy,
-  limit,
 } = require('firebase/firestore');
 
 const { initializeFirebase } = require('../firebase');
@@ -19,6 +16,7 @@ const { initializeFirebase } = require('../firebase');
 const fireapp = initializeFirebase();
 const db = getFirestore(fireapp);
 
+// add book to library collection
 const addBook = async (req, res) => {
   try {
     await addDoc(collection(db, 'books'), {
@@ -33,6 +31,7 @@ const addBook = async (req, res) => {
     return res.status(400).json(e);
   }
 };
+// update book in library collection
 const updateBook = async (req, res) => {
   try {
     const docRef = doc(db, 'books', req.params.bookid);
@@ -44,6 +43,8 @@ const updateBook = async (req, res) => {
     return res.status(400).send(error);
   }
 };
+
+// delete book from library collection
 const deleteBook = async (req, res) => {
   try {
     await deleteDoc(doc(db, 'books', req.params.bookid));
@@ -54,63 +55,25 @@ const deleteBook = async (req, res) => {
 };
 
 // eslint-disable-next-line consistent-return
+// get all books from library
 const getAllBooks = async (req, res) => {
   // eslint-disable-next-line prefer-const
   let books = [];
   // eslint-disable-next-line prefer-const
-  let count = 0;
   try {
     const q = query(collection(db, 'books'), orderBy('name'));
-    // const unsubscribe = onSnapshot(q, (querySnapshot) => {
-    //   console.log('inside');
-    //   // eslint-disable-next-line prefer-const
-    //   let tempbooks = [];
-    //   console.log(querySnapshot);
-    //   querySnapshot.forEach((document) => {
-    //     console.log(document);
-    //     tempbooks.push(document.data());
-    //     console.log(document.data());
-    //   });
-    // });
-    // console.log(unsubscribe);
-
-    onSnapshot(q, { includeMetadataChanges: true }, (querySnapshot) => {
-      querySnapshot.forEach((document) => {
-        // console.log(document.data());
-        books.push(document.data());
-      });
-      // console.log(books);
-      const changes = querySnapshot.docChanges();
-      console.log(changes[0]);
-      if (changes[0].type === 'modified') {
-        return res.json(books);
-      }
-      // count++;
-      return res.status(200).json(books);
+    const querySnapshot = await getDocs(q);
+    querySnapshot.forEach((document) => {
+      // doc.data() is never undefined for query doc snapshots
+      books.push(document.data());
     });
-    // onSnapshot(q, { includeMetadataChanges: true }, (querySnapshot) => {
-    //   querySnapshot.docChanges().forEach((change) => {
-    //     console.log('inside');
-    //     if (change.type === 'added') {
-    //       console.log('New city: ', change.doc.data());
-    //     }
-    //     if (change.type === 'modified') {
-    //       console.log('Modified city: ', change.doc.data());
-    //     }
-    //     if (change.type === 'removed') {
-    //       console.log('Removed city: ', change.doc.data());
-    //     }
-    //   });
-    // });
-    // const querySnapshot = await getDocs(q);
-    // querySnapshot.forEach((document) => {
-    //   // doc.data() is never undefined for query doc snapshots
-    //   books.push(document.data());
-    // });
+    return res.status(200).json(books);
   } catch (error) {
     return res.status(404).send('Not Found');
   }
 };
+
+// get a specific book based on book id
 const getBook = async (req, res) => {
   // eslint-disable-next-line prefer-const
   let books = [];
